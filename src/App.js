@@ -74,7 +74,10 @@ function CertificateShowcase({ backButtonHandler, type }) {
 
     setSuggestionData([]);
 
-    if (e === '') return;
+    if (e === '') {
+      setIsGenerateButtonDisabled(true);
+      return;
+    }
 
     let suggestios = [];
 
@@ -83,6 +86,17 @@ function CertificateShowcase({ backButtonHandler, type }) {
         suggestios.push([nameUA, index]);
       }
     })
+
+    if (suggestios.length === 0) {
+      setIsGenerateButtonDisabled(true);
+    }
+
+    if (suggestios.length === 1 && suggestios[0][0] === e) {
+      SetUserDataIndex(suggestios[0][1]);
+      setSuggestionData([])
+
+      return;
+    }
 
     setSuggestionData(suggestios);
 

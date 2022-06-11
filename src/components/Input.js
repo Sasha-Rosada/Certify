@@ -19,7 +19,7 @@ function TextInput({ value, onInput, id, suggestion, placeholder, setUserDataInd
     return (
         <div className="d-flex flex-grow-1 position-relative">
             <input type="text" className="form-control" id={id} placeholder={placeholder} autoComplete={'off'} value={_value} onInput={_onInput} />
-            <ul id={`data-list-${id}`} className="position-absolute list-group top-100 w-100">
+            <ul id={`data-list-${id}`} className="position-absolute list-group top-100 w-100" style={{ maxHeight: '50rem', overflowY: 'auto'}}>
                 {
                     suggestion.map(([seggest, i], index) => <li style={LiStyle} onClick={() => liCl(seggest, i)} className="list-group-item text-start" key={`${seggest.split(' ').join()}-${index}`}>{seggest}</li>)
                 }
