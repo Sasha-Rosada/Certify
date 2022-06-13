@@ -1,12 +1,28 @@
 import settings from "./settings"
 
+const DEFAULT = {
+    DOUBLE_ROW: {
+        SPLIT: ' '
+    }
+}
+
+function chunk(array, chunkSize) {
+    const chunks = [];
+
+    for (let i = 0; i < array.length; i += chunkSize) {
+        chunks.push(array.slice(i, i + chunkSize));    
+    }
+
+    return chunks;
+}
+
 
 async function generate_certificate(src, settings, alias, userdata, extension) {
     return new Promise((resolve, reject) => {
         const template = new Image();
 
         template.onload = async ({ path: { 0: img } }) => {
-            const { canvas, context } = Canvas(img.naturalWidth, img.naturalHeight);
+            const { canvas, context } = Canvas(img.naturalWidth, img.naturalHeight, '2d', { alpha: false });
 
             context.textAlign = 'center';
             context.drawImage(img, 0, 0);
@@ -20,10 +36,17 @@ async function generate_certificate(src, settings, alias, userdata, extension) {
     })
 }
 
+/**
+ * 
+ * @param {CanvasRenderingContext2D} context 
+ * @param {*} settings 
+ * @param {*} alias 
+ * @param {*} userdata 
+ */
 function DrawOnTemplate(context, settings, alias, userdata) {
     const { dataset } = settings;
 
-    const 
+    const
         baseX = context.canvas.width / 2,
         baseY = context.canvas.height / 2;
 
@@ -31,12 +54,14 @@ function DrawOnTemplate(context, settings, alias, userdata) {
         const { [dataset[index]]: { [alias]: MappingAlias } } = settings.mapping;
         const { [dataset[index]]: AliasOffset } = settings.offset
         const { [dataset[index]]: Font } = settings.font;
-        const { edit: Edit } = settings;
+        const { [dataset[index]]: Edit } = settings.edit || {};
 
         const { [MappingAlias]: AliasContent } = userdata;
 
         // mb function
-        context.font = Font;
+        context.font = Array.isArray(Font) ? Font[0] : Font;
+        // context.direction = Array.isArray(Font) ? Font[1] : 'ltr';
+        context.textAlign = 'center'
 
         let x, y;
 
@@ -49,19 +74,34 @@ function DrawOnTemplate(context, settings, alias, userdata) {
             y = baseY + AliasOffset[alias][1];
         }
 
-        // * Double Row Handler
-        if (Edit?.doubleRow) {
-            let splittedContent = AliasContent.split(Edit.doubleRow.split);
+        if (Edit?.splitToRows) {
+            let splittedContent = AliasContent.split(Edit.splitToRows?.split || DEFAULT.DOUBLE_ROW.SPLIT);
 
-            let
-                fLine = splittedContent[Edit.doubleRow.part - 1],
-                sLine = splittedContent.splice(Edit.doubleRow.part).join(Edit.doubleRow.split);
+            let toDraw = chunk(splittedContent, 2);
 
-            context.fillText(fLine, x, y);
-            context.fillText(sLine, x, y + Edit.doubleRow.gap);
+            x += Edit.splitToRows.offset[0] || 0;
+            y += Edit.splitToRows.offset[1] || 0;
+
+            toDraw.forEach((v, i) => {
+                context.fillText(v.join(' '), x, y + i * Edit.splitToRows.gap)
+            })
         } else {
             context.fillText(AliasContent, x, y);
         }
+
+        // // * Double Row Handler
+        // if (Edit?.doubleRow) {
+        //     let splittedContent = AliasContent.split(Edit.doubleRow.split);
+
+        //     let
+        //         fLine = splittedContent[Edit.doubleRow.part],
+        //         sLine = splittedContent.splice(Edit.doubleRow.part).join(Edit.doubleRow.split);
+
+        //     context.fillText(fLine, x, y);
+        //     context.fillText(sLine, x, y + Edit.doubleRow.gap);
+        // } else {
+        //     context.fillText(AliasContent, x, y);
+        // }
 
     }
 }
@@ -73,7 +113,7 @@ async function generate(type, userdata, extension) {
 
     for (let i = 0; i < alias.length; i++) {
         const src = `image/${key}/${mapping[alias[i]]}`;
-        
+
         const ImageData = await generate_certificate(src, settings[type], alias[i], userdata, extension);
 
         ImagesData.push([ImageData, alias[i]]);
@@ -82,13 +122,13 @@ async function generate(type, userdata, extension) {
     return ImagesData;
 }
 
-function Canvas(w, h) {
+function Canvas(w, h, contextType, contextAtributes) {
     const canvas = document.createElement('canvas');
 
     canvas.width = w;
     canvas.height = h;
 
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext(contextType, contextAtributes);
 
     return { canvas, context };
 }

@@ -23,25 +23,19 @@ const GenerationSettings = {
                 ua: 'nominationUA'
             }
         },
-        edit: {
-            place: {
-                en: {
-                    after: '`s'
-                }
-            }
-        },
         offset: {
             name: [0, -55],
             place: {
                 ua: [140, 115],
                 en: [-155, 115]
             },
-            nomination: [240, 600]
+            nomination: [250, 600]
         },
         font: {
             name: 'italic 120px Segoe UI',
             place: '70px Segoe UI',
-            nomination: '70px Segoe UI'
+            nomination: ['60px Segoe UI', 'rtl']
+            
         }
     },
     Mentor: {
@@ -90,10 +84,10 @@ const GenerationSettings = {
             name: 'italic 120px Segoe UI'
         },
         edit: {
-            doubleRow: {
-                split: ' ',
-                part: 1,
-                gap: 120
+            name: {
+                splitToRows: {
+                    count: 2
+                }
             }
         }
     }
